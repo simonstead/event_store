@@ -2,7 +2,7 @@ extends layout
 
 block content
   h1= title
-  form(method='POST', action='/register')
-    input(type='text', name='username')
-    button(type="submit") submit
+  form(method='POST', action='/register', id='form')
+    input(type='text', name='username', tabindex='1')
+    a(onClick=`document.getElementById('form').submit()`, tabindex='2') submit
     
