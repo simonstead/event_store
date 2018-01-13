@@ -4,27 +4,33 @@ var router = express.Router();
 
 const userList = [];
 
-request
-  .post('http://event_store:3000/subscribe', (err, response, body) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log(body);
-    }
-  })
-  .form({
-    eventType: 'register',
-    callbackUrl: 'http://user_list:3002/user_list',
-  });
+const subscribeToStore = () =>
+  request
+    .post('http://event_store:3000/subscribe', (err, response, body) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log('SUBSCRIBED TO STORE');
+        const data = JSON.parse(body)['data'];
+        const dataItems = data.map(item => JSON.parse(item));
+        userList.push(...dataItems);
+      }
+    })
+    .form({
+      eventType: 'register',
+      callbackUrl: 'http://user_list:3002/user_list'
+    });
+
+subscribeToStore();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: userList });
+  res.render('index', { users: userList });
 });
 
 router.post('/user_list', (req, res, next) => {
   console.log('USER RECEIVED', req.body);
-  userList.push(req.body.username);
+  userList.push(req.body);
   res.json({ status: 'success' });
 });
 

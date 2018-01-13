@@ -2,8 +2,9 @@ const request = require('request');
 const express = require('express');
 const router = express.Router();
 
+const redisClient = require('../redisClient');
 const subscriptions = {};
-const eventStore = [];
+const EVENT_STORE = 'event_store';
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -13,11 +14,22 @@ router.get('/', function(req, res, next) {
 router.post('/events', (req, res, next) => {
   console.log('EVENT RECEIVED', req.body.eventType);
   console.log(subscriptions);
-  const event = req.body;
-  const { eventType, username } = event;
+  const event = { ...req.body, timestamp: new Date() };
+  const { eventType, username } = req.body;
 
-  eventStore.push({ ...event, timestamp: new Date() });
-  console.log(eventStore);
+  redisClient.lpush(EVENT_STORE, JSON.stringify(event), (err, len) => {
+    if (err) {
+      console.error(err);
+    } else {
+      redisClient.lrange(EVENT_STORE, 0, -1, (err, data) => {
+        if (err) {
+          console.error(err);
+        } else {
+          console.log(`---\n---\n ${data} \n---\n---`);
+        }
+      });
+    }
+  });
 
   if (subscriptions[eventType]) {
     subscriptions[eventType].forEach(endpoint => {
@@ -46,7 +58,20 @@ router.post('/subscribe', (req, res, next) => {
 
   console.log(subscriptions);
 
-  res.json({ msg: `SUBSCRIBED TO /${eventType}` });
+  redisClient.lrange(EVENT_STORE, 0, -1, (err, data) => {
+    if (err) {
+      console.error(err);
+      res.json({
+        msg: `SUBSCRIBED TO /${eventType}`,
+        err: 'Could not get seed data'
+      });
+    } else {
+      res.json({
+        msg: `SUBSCRIBED TO /${eventType}`,
+        data: data
+      });
+    }
+  });
 });
 
 module.exports = router;

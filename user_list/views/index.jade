@@ -2,5 +2,5 @@ extends layout
 
 block content
   h1 user list
-  for t in title
-    h2= t
+  for user in users
+    h2= user.username

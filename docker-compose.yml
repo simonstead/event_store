@@ -1,5 +1,7 @@
 version: '3'
 services:
+    redis:
+        image: redis
     register:
         build: ./register
         depends_on: 
@@ -14,5 +16,7 @@ services:
           - 3002:3002
     event_store:
         build: ./event_store
+        depends_on:
+          - redis
         ports:
           - 3000:3000
