@@ -3,7 +3,6 @@ const express = require('express');
 const router = express.Router();
 
 const redisClient = require('../redisClient');
-const subscriptions = {};
 const EVENT_STORE = 'event_store';
 
 /* GET home page. */
@@ -13,7 +12,6 @@ router.get('/', function(req, res, next) {
 
 router.post('/events', (req, res, next) => {
   console.log('EVENT RECEIVED', req.body.eventType);
-  console.log(subscriptions);
   const event = { ...req.body, timestamp: new Date() };
   const { eventType, username } = req.body;
 
@@ -31,16 +29,20 @@ router.post('/events', (req, res, next) => {
     }
   });
 
-  if (subscriptions[eventType]) {
-    subscriptions[eventType].forEach(endpoint => {
-      console.log('STARTING_POST to', endpoint);
-      request
-        .post(endpoint, (err, response, body) => {
-          console.log('MESSAGE BROADCASTED:', event);
-        })
-        .form(event);
-    });
-  }
+  redisClient.smembers(`subscriptions:${eventType}`, (err, endpoints) => {
+    if (err) {
+      console.error(err);
+    } else {
+      endpoints.forEach(endpoint => {
+        console.log('STARTING_POST to', endpoint);
+        request
+          .post(endpoint, (err, response, body) => {
+            console.log('MESSAGE BROADCASTED:', event);
+          })
+          .form(event);
+      });
+    }
+  });
 
   res.json({ status: 'success' });
 });
@@ -50,13 +52,13 @@ router.post('/subscribe', (req, res, next) => {
   const eventType = req.body.eventType;
   const callbackUrl = req.body.callbackUrl;
 
-  if (!subscriptions[eventType]) {
-    subscriptions[eventType] = [callbackUrl];
-  } else if (subscriptions[eventType].indexOf(callbackUrl) === -1) {
-    subscriptions[eventType].push(callbackUrl);
-  }
-
-  console.log(subscriptions);
+  redisClient.sadd(`subscriptions:${eventType}`, callbackUrl, (err, data) => {
+    if (err) {
+      console.error(err);
+    } else {
+      console.log('NEW SUBSCRIBER TO', eventType);
+    }
+  });
 
   redisClient.lrange(EVENT_STORE, 0, -1, (err, data) => {
     if (err) {
