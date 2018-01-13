@@ -1,0 +1,18 @@
+version: '3'
+services:
+    register:
+        build: ./register
+        depends_on: 
+          - event_store
+        ports:
+          - 3001:3001
+    user_list:
+        build: ./user_list
+        depends_on:
+          - event_store
+        ports:
+          - 3002:3002
+    event_store:
+        build: ./event_store
+        ports:
+          - 3000:3000
