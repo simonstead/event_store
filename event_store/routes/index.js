@@ -21,8 +21,7 @@ router.post('/events', (req, res, next) => {
 
   if (subscriptions[eventType]) {
     subscriptions[eventType].forEach(endpoint => {
-      console.log(endpoint);
-      console.log('STARTING_POST');
+      console.log('STARTING_POST to', endpoint);
       request
         .post(endpoint, (err, response, body) => {
           console.log('MESSAGE BROADCASTED:', event);
@@ -34,7 +33,7 @@ router.post('/events', (req, res, next) => {
   res.json({ status: 'success' });
 });
 
-// { eventType: "register", callbackUrl: "http://localhost:3002/event_list"}
+// { eventType: "register", callbackUrl: "http://localhost:3002/user_list"}
 router.post('/subscribe', (req, res, next) => {
   const eventType = req.body.eventType;
   const callbackUrl = req.body.callbackUrl;

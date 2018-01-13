@@ -14,11 +14,11 @@ router.post('/register', (req, res, next) => {
     username: username,
   };
   request
-    .post('http://localhost:3000/events', (err, response, body) => {
+    .post('http://event_store:3000/events', (err, response, body) => {
       if (err) {
         console.log(err);
       }
-      console.log(response.status);
+      console.log(response.status_code);
       res.render('index', { title: 'Your sign up is being processed' });
     })
     .form(eventRequest);
