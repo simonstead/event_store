@@ -12,6 +12,9 @@ const subscribeToStore = () =>
       } else {
         console.log('SUBSCRIBED TO STORE');
         const data = JSON.parse(body)['data'];
+        if (!data || data.length === 0) {
+          console.log('WARNING NO DATA RECEIVED');
+        }
         const dataItems = data.map(item => JSON.parse(item));
         userList.push(...dataItems);
       }

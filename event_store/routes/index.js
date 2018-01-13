@@ -4,7 +4,7 @@ const router = express.Router();
 
 const redisClient = require('../redisClient');
 const subscriptions = {};
-const EVENT_STORE = 'event-store';
+const EVENT_STORE = 'event_store';
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
