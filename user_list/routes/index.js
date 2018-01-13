@@ -6,7 +6,7 @@ const userList = [];
 
 const subscribeToStore = () =>
   request
-    .post('http://event_store:3000/subscribe', (err, response, body) => {
+    .post('http://event-store:3000/subscribe', (err, response, body) => {
       if (err) {
         console.log(err);
       } else {
@@ -18,7 +18,7 @@ const subscribeToStore = () =>
     })
     .form({
       eventType: 'register',
-      callbackUrl: 'http://user_list:3002/user_list'
+      callbackUrl: 'http://user-list:3002/user_list'
     });
 
 subscribeToStore();

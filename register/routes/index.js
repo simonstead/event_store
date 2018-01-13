@@ -14,7 +14,7 @@ router.post('/register', (req, res, next) => {
     username: username
   };
   request
-    .post('http://event_store:3000/events', (err, response, body) => {
+    .post('http://event-store:3000/events', (err, response, body) => {
       if (err) {
         console.log(err);
       }

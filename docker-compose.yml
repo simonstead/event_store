@@ -5,16 +5,16 @@ services:
     register:
         build: ./register
         depends_on: 
-          - event_store
+          - event-store
         ports:
           - 3001:3001
-    user_list:
+    user-list:
         build: ./user_list
         depends_on:
-          - event_store
+          - event-store
         ports:
           - 3002:3002
-    event_store:
+    event-store:
         build: ./event_store
         depends_on:
           - redis
