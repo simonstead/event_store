@@ -5,6 +5,14 @@ const router = express.Router();
 const redisClient = require('../redisClient');
 const EVENT_STORE = 'event_store';
 
+redisClient.scan(0, 'MATCH', 'event*', (err, data) => {
+  if (err) {
+    console.error(err);
+  } else {
+    console.log(data);
+  }
+});
+
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Store' });
@@ -12,8 +20,18 @@ router.get('/', function(req, res, next) {
 
 router.post('/events', (req, res, next) => {
   console.log('EVENT RECEIVED', req.body.eventType);
-  const event = { ...req.body, timestamp: new Date() };
+  const timestamp = new Date().getTime();
+  const event = { ...req.body, timestamp: timestamp };
   const { eventType, username } = req.body;
+
+  // maybe we have a list of 'eventType:timestamp' which we push to,
+  // then a bunch of hashest with 'streamId:timestamp' as their key?
+  // maybe also a sorted set of streamIds
+
+  // sadd 'streams' : '1'
+  // lpush 'event_store' : 'register:1515926279094'
+  // hmset '1:1515926279094' username 'Finn the Human'
+  §
 
   redisClient.lpush(EVENT_STORE, JSON.stringify(event), (err, len) => {
     if (err) {
