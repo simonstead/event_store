@@ -31,7 +31,6 @@ router.post('/events', (req, res, next) => {
   // sadd 'streams' : '1'
   // lpush 'event_store' : 'register:1515926279094'
   // hmset '1:1515926279094' username 'Finn the Human'
-  §
 
   redisClient.lpush(EVENT_STORE, JSON.stringify(event), (err, len) => {
     if (err) {
@@ -83,12 +82,12 @@ router.post('/subscribe', (req, res, next) => {
       console.error(err);
       res.json({
         msg: `SUBSCRIBED TO /${eventType}`,
-        err: 'Could not get seed data'
+        err: 'Could not get seed data',
       });
     } else {
       res.json({
         msg: `SUBSCRIBED TO /${eventType}`,
-        data: data
+        data: data,
       });
     }
   });

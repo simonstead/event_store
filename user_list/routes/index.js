@@ -14,14 +14,15 @@ const subscribeToStore = () =>
         const data = JSON.parse(body)['data'];
         if (!data || data.length === 0) {
           console.log('WARNING NO DATA RECEIVED');
+        } else {
+          const dataItems = data.map(item => JSON.parse(item));
+          userList.push(...dataItems);
         }
-        const dataItems = data.map(item => JSON.parse(item));
-        userList.push(...dataItems);
       }
     })
     .form({
       eventType: 'register',
-      callbackUrl: 'http://user-list:3002/user_list'
+      callbackUrl: 'http://user-list:3002/user_list',
     });
 
 subscribeToStore();
