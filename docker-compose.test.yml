@@ -2,36 +2,27 @@ version: '3'
 services:
     redis:
         image: redis
-    dob:
-        build: ./dob
-        depends_on:
-          - event-store
-        ports:
-          - 5000:5000
-        volumes:
-          - ./dob:/usr/src/app
-        command: bash -c "flask run --host=0.0.0.0"
     register:
         build: ./register
         depends_on:
           - event-store
-        volumes:
-          - ./register:/usr/src/app
+        environment:
+          - TEST=true
         ports:
           - 3001:3001
     user-list:
         build: ./user_list
         depends_on:
           - event-store
+        environment:
+          - TEST=true
         ports:
           - 3002:3002
-        volumes:
-          - ./user_list:/usr/src/app
     event-store:
         build: ./event_store
+        environment:
+          - TEST=true
         depends_on:
           - redis
-        volumes:
-          - ./event_store:/usr/src/app
         ports:
           - 3000:3000

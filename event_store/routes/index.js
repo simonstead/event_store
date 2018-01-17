@@ -18,20 +18,7 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Store' });
 });
 
-router.post('/events', (req, res, next) => {
-  console.log('EVENT RECEIVED', req.body.eventType);
-  const timestamp = new Date().getTime();
-  const event = { ...req.body, timestamp: timestamp };
-  const { eventType, username } = req.body;
-
-  // maybe we have a list of 'eventType:timestamp' which we push to,
-  // then a bunch of hashest with 'streamId:timestamp' as their key?
-  // maybe also a sorted set of streamIds
-
-  // sadd 'streams' : '1'
-  // lpush 'event_store' : 'register:1515926279094'
-  // hmset '1:1515926279094' username 'Finn the Human'
-
+const addEventToStore = event =>
   redisClient.lpush(EVENT_STORE, JSON.stringify(event), (err, len) => {
     if (err) {
       console.error(err);
@@ -46,7 +33,8 @@ router.post('/events', (req, res, next) => {
     }
   });
 
-  redisClient.smembers(`subscriptions:${eventType}`, (err, endpoints) => {
+const postToAllSubscribers = event =>
+  redisClient.smembers(`subscriptions:${event.eventType}`, (err, endpoints) => {
     if (err) {
       console.error(err);
     } else {
@@ -61,14 +49,28 @@ router.post('/events', (req, res, next) => {
     }
   });
 
+router.post('/events', (req, res, next) => {
+  console.log('EVENT RECEIVED', req.body.eventType);
+  const timestamp = new Date().getTime();
+  const event = { ...req.body, timestamp: timestamp };
+
+  // maybe also have a set of events. Check if in the set 'events' it exists and add if not
+
+  // maybe we have a list of 'eventType:timestamp' which we push to,
+  // then a bunch of hashest with 'streamId:timestamp' as their key?
+  // maybe also a sorted set of streamIds
+
+  // sadd 'streams' : '1'
+  // lpush 'event_store' : 'register:1515926279094'
+  // hmset '1:1515926279094' username 'Finn the Human'
+
+  addEventToStore(event);
+  postToAllSubscribers(event);
+
   res.json({ status: 'success' });
 });
 
-// { eventType: "register", callbackUrl: "http://localhost:3002/user_list"}
-router.post('/subscribe', (req, res, next) => {
-  const eventType = req.body.eventType;
-  const callbackUrl = req.body.callbackUrl;
-
+const addSubscriptionToSet = (eventType, callbackUrl) =>
   redisClient.sadd(`subscriptions:${eventType}`, callbackUrl, (err, data) => {
     if (err) {
       console.error(err);
@@ -77,6 +79,7 @@ router.post('/subscribe', (req, res, next) => {
     }
   });
 
+const replyWithAllEvents = (res, eventType) =>
   redisClient.lrange(EVENT_STORE, 0, -1, (err, data) => {
     if (err) {
       console.error(err);
@@ -91,6 +94,13 @@ router.post('/subscribe', (req, res, next) => {
       });
     }
   });
+
+// { eventType: "register", callbackUrl: "http://localhost:3002/user_list"}
+router.post('/subscribe', (req, res, next) => {
+  const eventType = req.body.eventType;
+  const callbackUrl = req.body.callbackUrl;
+  addSubscriptionToSet(eventType, callbackUrl);
+  replyWithAllEvents(res, eventType);
 });
 
 module.exports = router;

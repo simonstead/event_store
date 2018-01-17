@@ -1,11 +1,21 @@
 var redis = require('redis'),
   client = redis.createClient({
-    host: 'redis'
+    host: 'redis',
   });
 
 client.on('error', function(err) {
   console.log('Error ' + err);
 });
+
+if (process.env.NODE_ENV === 'test' || process.env.TEST === true) {
+  client.select(1, (err, data) => {
+    if (err) {
+      console.error(err);
+    } else {
+      console.log('Connected to test database');
+    }
+  });
+}
 
 // client.rpush('event_store', 'hello', (err, length) => {
 //   if (err) {
