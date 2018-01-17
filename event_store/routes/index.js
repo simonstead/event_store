@@ -5,13 +5,13 @@ const router = express.Router();
 const redisClient = require('../redisClient');
 const EVENT_STORE = 'event_store';
 
-redisClient.scan(0, 'MATCH', 'event*', (err, data) => {
-  if (err) {
-    console.error(err);
-  } else {
-    console.log(data);
-  }
-});
+// redisClient.scan(0, 'MATCH', 'event*', (err, data) => {
+//   if (err) {
+//     console.error(err);
+//   } else {
+//     console.log(data);
+//   }
+// });
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
