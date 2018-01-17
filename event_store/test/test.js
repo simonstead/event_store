@@ -3,22 +3,34 @@ process.env.NODE_ENV = 'test';
 
 const chai = require('chai');
 const chaiHttp = require('chai-http');
-const should = chai.should();
+const should = chai.should(),
+  expect = chai.expect;
 chai.use(chaiHttp);
 
 const redis = require('../redisClient');
-redis.select(1, (err, data) => {
-  if (err) {
-    console.error(err);
-  } else {
-    console.log('Connected to test database');
-  }
-});
-redis.flushdb();
 
 describe('event store', done => {
   const server = require('../app.js');
-  it('should not bork', () => {
+
+  before(() => {
+    redis.select(1, (err, data) => {
+      if (err) {
+        console.error(err);
+      } else {
+        console.log('Connected to test database');
+      }
+    });
+  });
+
+  after(() => {
+    redis.flushdb();
+    redis.quit();
+    setTimeout(() => {
+      process.exit(0);
+    }, 1000);
+  });
+
+  it('should respond to /', () => {
     chai
       .request(server)
       .get('/')
@@ -28,8 +40,8 @@ describe('event store', done => {
   });
 
   it('can register subscribers', done => {
-    const arbitraryEventType = 'register';
-    const arbitraryCallbackUrl = 'http://www.fake.com';
+    const arbitraryEventType = 'register',
+      arbitraryCallbackUrl = 'http://www.fake.com';
     chai
       .request(server)
       .post('/subscribe')
@@ -44,14 +56,37 @@ describe('event store', done => {
           `subscriptions:${arbitraryEventType}`,
           arbitraryCallbackUrl,
           (err, data) => {
-            if (err) {
-              done(err);
-            } else {
-              data.should.equal(1);
-              done();
-            }
+            expect(err).to.be.null;
+            data.should.equal(1);
+            done();
           },
         );
+      });
+  });
+
+  it('should accept events', done => {
+    const arbitraryEventType = 'register',
+      arbitraryUsername = 'Finn the Human';
+    chai
+      .request(server)
+      .post('/events')
+      .send({
+        eventType: arbitraryEventType,
+        username: arbitraryUsername,
+      })
+      .end((err, res) => {
+        expect(err).to.be.null;
+        redis.lrange(`event_store`, 0, -1, (err, data) => {
+          expect(err).to.be.null;
+          data.should.be.an('array');
+          data.length.should.equal(1);
+
+          const e = JSON.parse(data[0]);
+          e.eventType.should.equal(arbitraryEventType);
+          e.username.should.equal(arbitraryUsername);
+          e.timestamp.should.be.at.least(0);
+          done();
+        });
       });
   });
 });
