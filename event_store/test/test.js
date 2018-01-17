@@ -7,7 +7,7 @@ const should = chai.should(),
   expect = chai.expect;
 chai.use(chaiHttp);
 
-const redis = require('../redisClient');
+const redis = require('../redis/redisClient');
 
 describe('event store', done => {
   const server = require('../app.js');

@@ -2,7 +2,7 @@ const request = require('request');
 const express = require('express');
 const router = express.Router();
 
-const redisClient = require('../redisClient');
+const redisClient = require('../redis/redisClient');
 const EVENT_STORE = 'event_store';
 
 // redisClient.scan(0, 'MATCH', 'event*', (err, data) => {
